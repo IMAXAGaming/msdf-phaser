@@ -90,4 +90,12 @@ export default class MSDFPipeline extends Phaser.Renderer.WebGL.Pipelines.MultiP
 	set backgroundColor(value) {
 		this._bgColor = value;
 	}
+
+	onBatch (gameObject)
+    {
+        if (gameObject)
+        {
+            this.flush();
+        }
+    }
 }
