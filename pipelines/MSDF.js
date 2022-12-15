@@ -22,7 +22,8 @@ void main()
     float sd = median(texture.r, texture.g, texture.b);
     float screenPxDistance = uDistanceFieldScale*2.0*(sd - 0.5);
     float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
-	gl_FragColor = mix(opacity*uBgColor, opacity*uFgColor, opacity);
+	gl_FragColor = mix(opacity*uBgColor, uFgColor, opacity);
+	// gl_FragColor = mix(uBgColor, uFgColor, opacity); This is the correct for blending with a background color but it doesn't blend the alpha
 }
 `;
 
