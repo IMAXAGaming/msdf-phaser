@@ -1,5 +1,41 @@
-const fragShader = `
+const vertShaderSource = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
+
+uniform mat4 uProjectionMatrix;
+
+attribute vec2 inPosition;
+attribute vec2 inTexCoord;
+attribute float inTexId;
+attribute float inTintEffect;
+attribute vec4 inTint;
+
+uniform vec2 uScale;
+
+varying vec2 outTexCoord;
+varying float outTexId;
+varying float outTintEffect;
+varying vec4 outTint;
+
+void main ()
+{
+    gl_Position = uProjectionMatrix * vec4(inPosition, 1.0, 1.0);
+
+    outTexCoord = inTexCoord * uScale;
+    outTexId = inTexId;
+    outTint = inTint;
+    outTintEffect = inTintEffect;
+}`;
+
+const fragShaderSource = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
 uniform sampler2D uMainSampler[%count%];
 
 uniform float uDistanceFieldScale;
@@ -28,18 +64,18 @@ void main()
 `;
 
 export default class MSDFPipeline extends Phaser.Renderer.WebGL.Pipelines.MultiPipeline {
-	constructor(game) {
-		super({
-			game,
-			fragShader,
-			uniforms: [
-				'uProjectionMatrix',
-				'uMainSampler',
-				'uDistanceFieldScale',
-				'uFgColor',
-				'uBgColor'
-			]
-		});
+	constructor(config) {
+		config.vertShader = vertShaderSource;
+		config.fragShader = fragShaderSource;
+		config.uniforms = [
+			'uScale',
+			'uProjectionMatrix',
+			'uMainSampler',
+			'uDistanceFieldScale',
+			'uFgColor',
+			'uBgColor'
+		];
+		super(config);
 
 		this._distanceFieldScale = 1;
 		this._fgColor = [1, 1, 1, 1];
@@ -50,6 +86,11 @@ export default class MSDFPipeline extends Phaser.Renderer.WebGL.Pipelines.MultiP
 		super.onBind();
 
 		const data = gameObject.pipelineData;
+
+		let inputScale = [1.0, 1.0];
+		if (data.srcScale)
+			inputScale = data.srcScale;
+		this.set2f('uScale', inputScale[0], inputScale[1]);
 
 		let scale = 1;
 		if (data.scale)
